@@ -4,29 +4,29 @@ var cmdList = [];
 var OS_ARRAY_WITH_DATA = {};
 CMD_PAGES_URL = "https://api.github.com/repos/tldr-pages/tldr/contents/pages.fa/";
 
-$(document).ready(function() {
+$(document).ready(function () {
 
     $.ajax({
         url: CMD_PAGES_URL,
         success: function (data) {
 
-        	jQuery.each( data, function( i, val ) {
-			 	
+            jQuery.each(data, function (i, val) {
+
                 //console.log(OS_LIST[i].type);
-                if (val.type == "dir"){
-	               //console.log(val.name);
-                   OS_LIST.push(val);
+                if (val.type == "dir") {
+                    //console.log(val.name);
+                    OS_LIST.push(val);
                 }
-	            //alert(data[i].name);	
-			});
+                //alert(data[i].name);
+            });
 
             //console.log(OS_LIST);
-            
 
-            for (i = 0; i < OS_LIST.length; i++){
+
+            for (i = 0; i < OS_LIST.length; i++) {
                 os_name = OS_LIST[i].name;
-                template = "<div class='jumbotron'> <p id='osname_" + i + "'></p> <p id='osnameTags_" + i +"'></p> </div>"
-                
+                template = "<div class='jumbotron'> <p id='osname_" + i + "'></p> <p id='osnameTags_" + i + "'></p> </div>"
+
                 $("#osSection").append(template);
                 $("#osname_" + i).html(os_name);
                 //console.log(os_name);
@@ -37,16 +37,16 @@ $(document).ready(function() {
 
                         tempHtml = "<div id='selector' class=''>";
                         temparr = [];
-                        jQuery.each( data, function( j, val ) {
-                            temparr.push(val.name);                            
-                            tempHtml = tempHtml + "<button type=\"button\" class=\"btn active badge\" id=\"" + val.name + "\" onclick=\"javascript:SearchButtonClicked('" + val.name + "');\">" + val.name + "</button>"
+                        jQuery.each(data, function (j, val) {
+                            temparr.push(val.name);
+                            tempHtml = tempHtml + "<button type=\"button\" class=\"btn badge bg-info ms-1\" id=\"" + val.name + "\" onclick=\"javascript:SearchButtonClicked('" + val.name + "');\">" + val.name + "</button>"
                         });
 
                         tempHtml = tempHtml + "</div>"
 
                         //$.sessionStorage(os_name, JSON.stringify(temparr));
                         OS_ARRAY_WITH_DATA[os_name] = temparr;
-                        $("#osnameTags_" + i ).html(tempHtml);
+                        $("#osnameTags_" + i).html(tempHtml);
                         tempHtml = "";
                         //alert(os_name + "----" + temparr);
                         //cmdList.splice(0, cmdList.length);
@@ -55,7 +55,7 @@ $(document).ready(function() {
             }
         },
         error: function (data) {
-            if( data.message ){
+            if (data.message) {
                 console.log(data.message);
             }
 
@@ -63,14 +63,14 @@ $(document).ready(function() {
         },
     });
 
-    SearchButtonClicked=function(cmdName) {
+    SearchButtonClicked = function (cmdName) {
         //alert(cmdName);
-        $('#searchBox').val(cmdName.substring(0,cmdName.lastIndexOf('.')));
+        $('#searchBox').val(cmdName.substring(0, cmdName.lastIndexOf('.')));
         $('#searchButton').click();
 
     }
 
-    Check=function(arr, str){
+    Check = function (arr, str) {
         var i, j;
         var totalmatches = 0;
         for (i = 0; i < arr.length; i++) {
@@ -87,50 +87,54 @@ $(document).ready(function() {
 
 });
 
- 
 
-$('#searchButton').on('click', function(e){
+$('#searchButton').on('click', function (e) {
     $("#cmdDetails").html("");
 
-	BASE_TLDR_API_URL = "https://api.github.com/repos/tldr-pages/tldr/contents/pages";
+    BASE_TLDR_API_URL = "https://api.github.com/repos/tldr-pages/tldr/contents/pages";
     e.preventDefault(); // prevent the default click action
     //alert("hi");
-	cmdToSearch	= $('#searchBox').val();
-	//alert(cmdName);
-	//console.log(OS_LIST);
+    cmdToSearch = $('#searchBox').val();
+    //alert(cmdName);
+    //console.log(OS_LIST);
 
     // $.each(OS_ARRAY_WITH_DATA, function (index, value) {
     //     alert( index + ' : ' + value );
     // });
 
 
- 	for (i = 0; i < OS_LIST.length; i++){
-      	if(Check(OS_ARRAY_WITH_DATA[OS_LIST[i].name], cmdToSearch +'.md')){
+    for (i = 0; i < OS_LIST.length; i++) {
+        if (Check(OS_ARRAY_WITH_DATA[OS_LIST[i].name], cmdToSearch + '.md')) {
             //console.log(exitfromloop);
-        	url = OS_LIST[i].url;
+            url = OS_LIST[i].url;
             os_name = OS_LIST[i].name;
 
-    	    $.ajax({
-    	        url: (url).split('?')[0] + "/" + cmdToSearch +'.md',
-    	        success: function (data) {
-    	            //alert('response received');
-    	            console.log(Base64.decode(data.content));
-    	            $("#cmdDetails").html(markdown.toHTML(Base64.decode(data.content)));
+            $.ajax({
+                url: (url).split('?')[0] + "/" + cmdToSearch + '.md',
+                success: function (data) {
+                    //alert('response received');
+                    console.log(Base64.decode(data.content));
+                    var res = markdown.toHTML(Base64.decode(data.content))
+                    res = res.replaceAll("<h1>", "<h1 class='cmd-title'>");
+                    res = res.replaceAll("<blockquote><p>", "<blockquote><p class='cmd-desc'>");
+                    res = res.replaceAll("</blockquote>", "</blockquote> <br>");
+                    res = res.replaceAll("<p><code>", "<p class='cmd-code'><code>");
+                    res = res.replaceAll("<li>", "<li class='cmd-code-desc'>");
+                    $("#cmdDetails").html(res);
                     exitfromloop = true;
-                    $("body").animate({ scrollTop: 0 }, "slow");
-    	            // ajax success callback
-    	        },
-    	        error: function (data) {
-    	            console.log('Command not found in -->' + os_name);
+                    $("body").animate({scrollTop: 0}, "slow");
+                    // ajax success callback
+                },
+                error: function (data) {
+                    console.log('Command not found in -->' + os_name);
                     $("#cmdDetails").html(data.message);
-                    $("body").animate({ scrollTop: 0 }, "slow");
-    	            // ajax error callback
-    	        }
-    	    });
-    	   }
-        else{
+                    $("body").animate({scrollTop: 0}, "slow");
+                    // ajax error callback
+                }
+            });
+        } else {
             $("#cmdDetails").html("Command help not found... Please select from the tags below.");
-            $("body").animate({ scrollTop: 0 }, "slow");
+            $("body").animate({scrollTop: 0}, "slow");
         }
     }
 });
@@ -146,10 +150,10 @@ $('#searchButton').on('click', function(e){
 var Base64 = {
 
     // private property
-    _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
 
     // public method for encoding
-    encode : function (input) {
+    encode: function (input) {
         var output = "";
         var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
         var i = 0;
@@ -174,8 +178,8 @@ var Base64 = {
             }
 
             output = output +
-            this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-            this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+                this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+                this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
 
         }
 
@@ -183,7 +187,7 @@ var Base64 = {
     },
 
     // public method for decoding
-    decode : function (input) {
+    decode: function (input) {
         var output = "";
         var chr1, chr2, chr3;
         var enc1, enc2, enc3, enc4;
@@ -220,8 +224,8 @@ var Base64 = {
     },
 
     // private method for UTF-8 encoding
-    _utf8_encode : function (string) {
-        string = string.replace(/\r\n/g,"\n");
+    _utf8_encode: function (string) {
+        string = string.replace(/\r\n/g, "\n");
         var utftext = "";
 
         for (var n = 0; n < string.length; n++) {
@@ -230,12 +234,10 @@ var Base64 = {
 
             if (c < 128) {
                 utftext += String.fromCharCode(c);
-            }
-            else if((c > 127) && (c < 2048)) {
+            } else if ((c > 127) && (c < 2048)) {
                 utftext += String.fromCharCode((c >> 6) | 192);
                 utftext += String.fromCharCode((c & 63) | 128);
-            }
-            else {
+            } else {
                 utftext += String.fromCharCode((c >> 12) | 224);
                 utftext += String.fromCharCode(((c >> 6) & 63) | 128);
                 utftext += String.fromCharCode((c & 63) | 128);
@@ -247,27 +249,25 @@ var Base64 = {
     },
 
     // private method for UTF-8 decoding
-    _utf8_decode : function (utftext) {
+    _utf8_decode: function (utftext) {
         var string = "";
         var i = 0;
         var c = c1 = c2 = 0;
 
-        while ( i < utftext.length ) {
+        while (i < utftext.length) {
 
             c = utftext.charCodeAt(i);
 
             if (c < 128) {
                 string += String.fromCharCode(c);
                 i++;
-            }
-            else if((c > 191) && (c < 224)) {
-                c2 = utftext.charCodeAt(i+1);
+            } else if ((c > 191) && (c < 224)) {
+                c2 = utftext.charCodeAt(i + 1);
                 string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
                 i += 2;
-            }
-            else {
-                c2 = utftext.charCodeAt(i+1);
-                c3 = utftext.charCodeAt(i+2);
+            } else {
+                c2 = utftext.charCodeAt(i + 1);
+                c3 = utftext.charCodeAt(i + 2);
                 string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
                 i += 3;
             }
